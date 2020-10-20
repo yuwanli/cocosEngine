@@ -370,7 +370,12 @@ let Material = cc.Class({
     },
 
     getHash () {
-        return this._manualHash || (this._effect && this._effect.getHash());
+        if (this._manualHash) {
+            return this._manualHash
+        }
+        if (this._effect && this._effect.getHash && typeof this._effect.getHash === 'function'){
+            return this._effect.getHash()
+        }
     },
 
     onLoad () {
