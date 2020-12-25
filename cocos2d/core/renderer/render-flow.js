@@ -17,14 +17,13 @@ const FINAL = 1 << FlagOfset++;
 let _batcher, _forward;
 let _cullingMask = 0;
 
-function RenderFlow () {
+function RenderFlow() {
     this._func = init;
     this._next = null;
 }
 
 let _proto = RenderFlow.prototype;
-_proto._doNothing = function () {
-};
+_proto._doNothing = function () {};
 
 _proto._localTransform = function (node) {
     node._updateLocalMatrix();
@@ -33,7 +32,7 @@ _proto._localTransform = function (node) {
 };
 
 _proto._worldTransform = function (node) {
-    _batcher.worldMatDirty ++;
+    _batcher.worldMatDirty++;
 
     let t = node._matrix;
     let trs = node._trs;
@@ -46,7 +45,7 @@ _proto._worldTransform = function (node) {
     node._renderFlag &= ~WORLD_TRANSFORM;
     this._next._func(node);
 
-    _batcher.worldMatDirty --;
+    _batcher.worldMatDirty--;
 };
 
 _proto._opacity = function (node) {
@@ -70,25 +69,30 @@ _proto._color = function (node) {
 
 _proto._updateRenderData = function (node) {
     let comp = node._renderComponent;
-    comp._assembler.updateRenderData(comp);
+    if (comp) {
+        comp._assembler.updateRenderData(comp);
+    }
+
     node._renderFlag &= ~UPDATE_RENDER_DATA;
     this._next._func(node);
 };
 
 _proto._render = function (node) {
     let comp = node._renderComponent;
+    if (comp) {
+        comp._assembler.updateRenderData(comp);
+    }
     comp._checkBacth(_batcher, node._cullingMask);
     comp._assembler.fillBuffers(comp, _batcher);
     this._next._func(node);
 };
-
 
 _proto._children = function (node) {
     let cullingMask = _cullingMask;
     let batcher = _batcher;
 
     let parentOpacity = batcher.parentOpacity;
-    let opacity = (batcher.parentOpacity *= (node._opacity / 255));
+    let opacity = (batcher.parentOpacity *= node._opacity / 255);
 
     let worldTransformFlag = batcher.worldMatDirty ? WORLD_TRANSFORM : 0;
     let worldOpacityFlag = batcher.parentOpacityDirty ? OPACITY_COLOR : 0;
@@ -102,7 +106,8 @@ _proto._children = function (node) {
         c._renderFlag |= worldDirtyFlag;
         if (!c._activeInHierarchy || c._opacity === 0) continue;
 
-        _cullingMask = c._cullingMask = c.groupIndex === 0 ? cullingMask : 1 << c.groupIndex;
+        _cullingMask = c._cullingMask =
+            c.groupIndex === 0 ? cullingMask : 1 << c.groupIndex;
 
         // TODO: Maybe has better way to implement cascade opacity
         let colorVal = c._color._val;
@@ -129,21 +134,21 @@ EMPTY_FLOW._next = EMPTY_FLOW;
 
 let flows = {};
 
-function createFlow (flag, next) {
+function createFlow(flag, next) {
     let flow = new RenderFlow();
     flow._next = next || EMPTY_FLOW;
 
     switch (flag) {
-        case DONOTHING: 
+        case DONOTHING:
             flow._func = flow._doNothing;
             break;
         case BREAK_FLOW:
             flow._func = flow._doNothing;
             break;
-        case LOCAL_TRANSFORM: 
+        case LOCAL_TRANSFORM:
             flow._func = flow._localTransform;
             break;
-        case WORLD_TRANSFORM: 
+        case WORLD_TRANSFORM:
             flow._func = flow._worldTransform;
             break;
         case OPACITY:
@@ -155,13 +160,13 @@ function createFlow (flag, next) {
         case UPDATE_RENDER_DATA:
             flow._func = flow._updateRenderData;
             break;
-        case RENDER: 
+        case RENDER:
             flow._func = flow._render;
             break;
-        case CHILDREN: 
+        case CHILDREN:
             flow._func = flow._children;
             break;
-        case POST_RENDER: 
+        case POST_RENDER:
             flow._func = flow._postRender;
             break;
     }
@@ -169,21 +174,20 @@ function createFlow (flag, next) {
     return flow;
 }
 
-function getFlow (flag) {
+function getFlow(flag) {
     let flow = null;
     let tFlag = FINAL;
     while (tFlag > 0) {
-        if (tFlag & flag)
-            flow = createFlow(tFlag, flow);
+        if (tFlag & flag) flow = createFlow(tFlag, flow);
         tFlag = tFlag >> 1;
     }
     return flow;
 }
 
-// 
-function init (node) {
+//
+function init(node) {
     let flag = node._renderFlag;
-    let r = flows[flag] = getFlow(flag);
+    let r = (flows[flag] = getFlow(flag));
     r._func(node);
 }
 
@@ -195,7 +199,7 @@ let _validateList = [];
 RenderFlow.registerValidate = function (renderComp) {
     if (renderComp._inValidateList) return;
     _validateList.push(renderComp);
-    renderComp._inValidateList =  true;
+    renderComp._inValidateList = true;
 };
 RenderFlow.validateRenderers = function () {
     for (let i = 0, l = _validateList.length; i < l; i++) {
@@ -203,8 +207,7 @@ RenderFlow.validateRenderers = function () {
         if (!renderComp.isValid) continue;
         if (!renderComp.enabledInHierarchy) {
             renderComp.disableRender();
-        }
-        else {
+        } else {
             renderComp._validateRender();
         }
         renderComp._inValidateList = false;
@@ -212,22 +215,20 @@ RenderFlow.validateRenderers = function () {
     _validateList.length = 0;
 };
 
-
 RenderFlow.visitRootNode = function (rootNode) {
-    RenderFlow.validateRenderers();    
+    RenderFlow.validateRenderers();
 
     _cullingMask = 1 << rootNode.groupIndex;
 
     if (rootNode._renderFlag & WORLD_TRANSFORM) {
-        _batcher.worldMatDirty ++;
+        _batcher.worldMatDirty++;
         rootNode._calculWorldMatrix();
         rootNode._renderFlag &= ~WORLD_TRANSFORM;
 
         flows[rootNode._renderFlag]._func(rootNode);
 
-        _batcher.worldMatDirty --;
-    }
-    else {
+        _batcher.worldMatDirty--;
+    } else {
         flows[rootNode._renderFlag]._func(rootNode);
     }
 };
