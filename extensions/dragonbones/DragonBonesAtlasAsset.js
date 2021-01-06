@@ -27,7 +27,7 @@
 /**
  * @module dragonBones
  */
-let ArmatureCache = !CC_JSB && require('./ArmatureCache').sharedCache;
+let ArmatureCache = !CC_JSB && require("./ArmatureCache").sharedCache;
 
 /**
  * !#en The skeleton atlas data of dragonBones.
@@ -36,15 +36,15 @@ let ArmatureCache = !CC_JSB && require('./ArmatureCache').sharedCache;
  * @extends Asset
  */
 var DragonBonesAtlasAsset = cc.Class({
-    name: 'dragonBones.DragonBonesAtlasAsset',
+    name: "dragonBones.DragonBonesAtlasAsset",
     extends: cc.Asset,
 
-    ctor () {
+    ctor() {
         this._clear();
     },
 
     properties: {
-        _atlasJson : '',
+        _atlasJson: "",
 
         /**
          * @property {string} atlasJson
@@ -57,44 +57,51 @@ var DragonBonesAtlasAsset = cc.Class({
                 this._atlasJson = value;
                 this._atlasJsonData = JSON.parse(this.atlasJson);
                 this._clear();
-            }
+            },
         },
 
         _texture: {
             default: null,
             type: cc.Texture2D,
-            formerlySerializedAs: 'texture'
+            formerlySerializedAs: "texture",
         },
 
         /**
          * @property {Texture2D} texture
          */
         texture: {
-            get () {
+            get() {
                 return this._texture;
             },
-            set (value) {
+            set(value) {
                 this._texture = value;
                 this._clear();
-            }
+            },
         },
 
         _textureAtlasData: null,
     },
 
     statics: {
-        preventDeferredLoadDependents: true
+        preventDeferredLoadDependents: true,
     },
 
-    createNode: CC_EDITOR &&  function (callback) {
-        var node = new cc.Node(this.name);
-        var armatureDisplay = node.addComponent(dragonBones.ArmatureDisplay);
-        armatureDisplay.dragonAtlasAsset = this;
+    createNode:
+        CC_EDITOR &&
+        function (callback) {
+            var node = new cc.Node(this.name);
+            var armatureDisplay = node.addComponent(
+                dragonBones.ArmatureDisplay
+            );
+            armatureDisplay.dragonAtlasAsset = this;
 
-        return callback(null, node);
-    },
+            return callback(null, node);
+        },
 
-    init (factory) {
+    init(factory) {
+        if (!factory) {
+            return;
+        }
         this._factory = factory;
 
         if (!this._atlasJsonData) {
@@ -107,13 +114,16 @@ var DragonBonesAtlasAsset = cc.Class({
 
         if (this._textureAtlasData) {
             factory.addTextureAtlasData(this._textureAtlasData, this._uuid);
-        }
-        else {
-            this._textureAtlasData = factory.parseTextureAtlasData(atlasJsonObj, this.texture, this._uuid);
+        } else {
+            this._textureAtlasData = factory.parseTextureAtlasData(
+                atlasJsonObj,
+                this.texture,
+                this._uuid
+            );
         }
     },
 
-    _clear () {
+    _clear() {
         if (CC_JSB) return;
         if (this._factory) {
             ArmatureCache.resetArmature(this._uuid);
@@ -123,7 +133,7 @@ var DragonBonesAtlasAsset = cc.Class({
         this._textureAtlasData = null;
     },
 
-    destroy () {
+    destroy() {
         this._clear();
         this._super();
     },
