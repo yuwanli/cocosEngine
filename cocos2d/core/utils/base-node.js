@@ -386,7 +386,7 @@ var BaseNode = cc.Class({
                 cc.errorID(3821);
             }
             eventManager._setDirtyForNode(this);
-            value._children.push(this);
+            value._children && value._children.push(this);
             value.emit && value.emit(CHILD_ADDED, this);
             value._renderFlag |= RenderFlow.FLAG_CHILDREN;
         }
