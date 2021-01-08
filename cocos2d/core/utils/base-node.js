@@ -541,6 +541,9 @@ var BaseNode = cc.Class({
             return;
         }
         var siblings = this._parent._children;
+        if (!siblings) {
+            return;
+        }
         index = index !== -1 ? index : siblings.length - 1;
         var oldIndex = siblings.indexOf(this);
         if (index !== oldIndex) {

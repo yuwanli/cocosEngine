@@ -9,5 +9,9 @@
         "node_modules": true,
         ".github": true,
         "bin": true
-    }
+    },
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": false
+    },
 }
