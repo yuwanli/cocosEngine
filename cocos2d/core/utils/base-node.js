@@ -76,6 +76,9 @@ function findComponent(node, constructor) {
 }
 
 function findComponents(node, constructor, components) {
+    if (!node._components){
+        return null;
+    }
     if (constructor._sealed) {
         for (let i = 0; i < node._components.length; ++i) {
             let comp = node._components[i];
