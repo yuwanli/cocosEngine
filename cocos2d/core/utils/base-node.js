@@ -958,7 +958,7 @@ var BaseNode = cc.Class({
 
         var component = new constructor();
         component.node = this;
-        this._components.push(component);
+        this._components && this._components.push(component);
         if (
             (CC_EDITOR || CC_TEST) &&
             cc.engine &&
