@@ -27,7 +27,7 @@
 /**
  * @module dragonBones
  */
-let ArmatureCache = !CC_JSB && require("./ArmatureCache").sharedCache;
+let ArmatureCache = !CC_JSB && require('./ArmatureCache').sharedCache;
 
 /**
  * !#en The skeleton data of dragonBones.
@@ -36,22 +36,22 @@ let ArmatureCache = !CC_JSB && require("./ArmatureCache").sharedCache;
  * @extends Asset
  */
 var DragonBonesAsset = cc.Class({
-    name: "dragonBones.DragonBonesAsset",
+    name: 'dragonBones.DragonBonesAsset',
     extends: cc.Asset,
 
-    ctor() {
+    ctor () {
         this.reset();
     },
 
     properties: {
-        _dragonBonesJson: "",
+        _dragonBonesJson : '',
 
         /**
          * !#en See http://developer.egret.com/cn/github/egret-docs/DB/dbLibs/dataFormat/index.html
          * !#zh 可查看 DragonBones 官方文档 http://developer.egret.com/cn/github/egret-docs/DB/dbLibs/dataFormat/index.html
          * @property {string} dragonBonesJson
          */
-        dragonBonesJson: {
+        dragonBonesJson : {
             get: function () {
                 return this._dragonBonesJson;
             },
@@ -59,45 +59,41 @@ var DragonBonesAsset = cc.Class({
                 this._dragonBonesJson = value;
                 this._dragonBonesJsonData = JSON.parse(value);
                 this.reset();
-            },
+            }
         },
 
         _nativeAsset: {
-            get() {
+            get () {
                 return this._buffer;
             },
-            set(bin) {
+            set (bin) {
                 this._buffer = bin.buffer || bin;
                 this.reset();
             },
-            override: true,
+            override: true
         },
     },
 
     statics: {
-        preventDeferredLoadDependents: true,
+        preventDeferredLoadDependents: true
     },
 
-    createNode:
-        CC_EDITOR &&
-        function (callback) {
-            var node = new cc.Node(this.name);
-            var armatureDisplay = node.addComponent(
-                dragonBones.ArmatureDisplay
-            );
-            armatureDisplay.dragonAsset = this;
+    createNode: CC_EDITOR &&  function (callback) {
+        var node = new cc.Node(this.name);
+        var armatureDisplay = node.addComponent(dragonBones.ArmatureDisplay);
+        armatureDisplay.dragonAsset = this;
 
-            return callback(null, node);
-        },
+        return callback(null, node);
+    },
 
-    reset() {
+    reset () {
         this._clear();
         if (CC_EDITOR) {
             this._armaturesEnum = null;
         }
     },
 
-    init(factory, atlasUUID) {
+    init (factory, atlasUUID) {
         if (CC_EDITOR) {
             this._factory = factory || new dragonBones.CCFactory();
         } else {
@@ -117,14 +113,11 @@ var DragonBonesAsset = cc.Class({
 
         // If create by manual, uuid is empty.
         if (!this._uuid) {
-            if (!this._factory) {
-                return;
-            }
-            let dbData = this._factory.getDragonBonesDataByRawData(rawData);
+            let dbData = this._factory && this._factory.getDragonBonesDataByRawData(rawData);
             if (dbData) {
                 this._uuid = dbData.name;
             } else {
-                cc.warn("dragonbones name is empty");
+                cc.warn('dragonbones name is empty');
             }
         }
 
@@ -138,64 +131,56 @@ var DragonBonesAsset = cc.Class({
 
     // EDITOR
 
-    getArmatureEnum:
-        CC_EDITOR &&
-        function () {
-            if (this._armaturesEnum) {
-                return this._armaturesEnum;
+    getArmatureEnum: CC_EDITOR && function () {
+        if (this._armaturesEnum) {
+            return this._armaturesEnum;
+        }
+        this.init();
+        let dragonBonesData = this._factory.getDragonBonesDataByUUID(this._uuid);
+        if (dragonBonesData) {
+            var armatureNames = dragonBonesData.armatureNames;
+            var enumDef = {};
+            for (var i = 0; i < armatureNames.length; i++) {
+                var name = armatureNames[i];
+                enumDef[name] = i;
             }
-            this.init();
-            let dragonBonesData = this._factory.getDragonBonesDataByUUID(
-                this._uuid
-            );
-            if (dragonBonesData) {
-                var armatureNames = dragonBonesData.armatureNames;
-                var enumDef = {};
-                for (var i = 0; i < armatureNames.length; i++) {
-                    var name = armatureNames[i];
-                    enumDef[name] = i;
-                }
-                return (this._armaturesEnum = cc.Enum(enumDef));
+            return this._armaturesEnum = cc.Enum(enumDef);
+        }
+        return null;
+    },
+
+    getAnimsEnum: CC_EDITOR && function (armatureName) {
+        this.init();
+
+        let dragonBonesData = this._factory.getDragonBonesDataByUUID(this._uuid);
+        if (dragonBonesData) {
+            var armature = dragonBonesData.getArmature(armatureName);
+            if (!armature) {
+                return null;
             }
-            return null;
-        },
 
-    getAnimsEnum:
-        CC_EDITOR &&
-        function (armatureName) {
-            this.init();
-
-            let dragonBonesData = this._factory.getDragonBonesDataByUUID(
-                this._uuid
-            );
-            if (dragonBonesData) {
-                var armature = dragonBonesData.getArmature(armatureName);
-                if (!armature) {
-                    return null;
+            var enumDef = { '<None>': 0 };
+            var anims = armature.animations;
+            var i = 0;
+            for (var animName in anims) {
+                if (anims.hasOwnProperty(animName)) {
+                    enumDef[animName] = i + 1;
+                    i++;
                 }
-
-                var enumDef = { "<None>": 0 };
-                var anims = armature.animations;
-                var i = 0;
-                for (var animName in anims) {
-                    if (anims.hasOwnProperty(animName)) {
-                        enumDef[animName] = i + 1;
-                        i++;
-                    }
-                }
-                return cc.Enum(enumDef);
             }
-            return null;
-        },
+            return cc.Enum(enumDef);
+        }
+        return null;
+    },
 
-    _clear() {
+    _clear () {
         if (this._factory) {
             ArmatureCache.resetArmature(this._uuid);
             this._factory.removeDragonBonesDataByUUID(this._uuid, true);
         }
     },
 
-    destroy() {
+    destroy () {
         this._clear();
         this._super();
     },

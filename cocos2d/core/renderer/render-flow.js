@@ -71,10 +71,9 @@ _proto._updateRenderData = function (node) {
     let comp = node._renderComponent;
     if (comp) {
         comp._assembler.updateRenderData(comp);
+        node._renderFlag &= ~UPDATE_RENDER_DATA;
+        this._next._func(node);
     }
-
-    node._renderFlag &= ~UPDATE_RENDER_DATA;
-    this._next._func(node);
 };
 
 _proto._render = function (node) {

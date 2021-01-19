@@ -24,28 +24,28 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-const Flags = require("../platform/CCObject").Flags;
-const misc = require("./misc");
-const js = require("../platform/js");
-const IdGenerater = require("../platform/id-generater");
-const eventManager = require("../event-manager");
-const RenderFlow = require("../renderer/render-flow");
+const Flags = require('../platform/CCObject').Flags;
+const misc = require('./misc');
+const js = require('../platform/js');
+const IdGenerater = require('../platform/id-generater');
+const eventManager = require('../event-manager');
+const RenderFlow = require('../renderer/render-flow');
 
 const Destroying = Flags.Destroying;
 const DontDestroy = Flags.DontDestroy;
-const Deactivating = Flags.Deactivating;
+const Deactivating = Flags.Deactivating; 
 
-const CHILD_ADDED = "child-added";
-const CHILD_REMOVED = "child-removed";
+const CHILD_ADDED = 'child-added';
+const CHILD_REMOVED = 'child-removed';
 
-var idGenerater = new IdGenerater("Node");
+var idGenerater = new IdGenerater('Node');
 
 function getConstructor(typeOrClassName) {
     if (!typeOrClassName) {
         cc.errorID(3804);
         return null;
     }
-    if (typeof typeOrClassName === "string") {
+    if (typeof typeOrClassName === 'string') {
         return js.getClassByName(typeOrClassName);
     }
 
@@ -53,20 +53,18 @@ function getConstructor(typeOrClassName) {
 }
 
 function findComponent(node, constructor) {
+    if (!node._components){
+        return null;
+    }
     if (constructor._sealed) {
-        if (!node._components) {
-            return;
-        }
         for (let i = 0; i < node._components.length; ++i) {
             let comp = node._components[i];
             if (comp.constructor === constructor) {
                 return comp;
             }
         }
-    } else {
-        if (!node._components) {
-            return;
-        }
+    }
+    else {
         for (let i = 0; i < node._components.length; ++i) {
             let comp = node._components[i];
             if (comp instanceof constructor) {
@@ -78,6 +76,9 @@ function findComponent(node, constructor) {
 }
 
 function findComponents(node, constructor, components) {
+    if (!node._components){
+        return null;
+    }
     if (constructor._sealed) {
         for (let i = 0; i < node._components.length; ++i) {
             let comp = node._components[i];
@@ -85,7 +86,8 @@ function findComponents(node, constructor, components) {
                 components.push(comp);
             }
         }
-    } else {
+    }
+    else {
         for (let i = 0; i < node._components.length; ++i) {
             let comp = node._components[i];
             if (comp instanceof constructor) {
@@ -101,7 +103,8 @@ function findChildComponent(children, constructor) {
         var comp = findComponent(node, constructor);
         if (comp) {
             return comp;
-        } else if (node._children.length > 0) {
+        }
+        else if (node._children.length > 0) {
             comp = findChildComponent(node._children, constructor);
             if (comp) {
                 return comp;
@@ -137,7 +140,7 @@ function findChildComponents(children, constructor, components) {
  * @private
  */
 var BaseNode = cc.Class({
-    name: "cc._BaseNode",
+    name: 'cc._BaseNode',
     extends: cc.Object,
 
     properties: {
@@ -174,16 +177,17 @@ var BaseNode = cc.Class({
          * @private
          */
         _persistNode: {
-            get() {
+            get () {
                 return (this._objFlags & DontDestroy) > 0;
             },
-            set(value) {
+            set (value) {
                 if (value) {
                     this._objFlags |= DontDestroy;
-                } else {
+                }
+                else {
                     this._objFlags &= ~DontDestroy;
                 }
-            },
+            }
         },
 
         // API
@@ -198,11 +202,11 @@ var BaseNode = cc.Class({
          * cc.log("Node Name: " + node.name);
          */
         name: {
-            get() {
+            get () {
                 return this._name;
             },
-            set(value) {
-                if (CC_DEV && value.indexOf("/") !== -1) {
+            set (value) {
+                if (CC_DEV && value.indexOf('/') !== -1) {
                     cc.errorID(1632);
                     return;
                 }
@@ -223,9 +227,9 @@ var BaseNode = cc.Class({
          * cc.log("Node Uuid: " + node.uuid);
          */
         uuid: {
-            get() {
+            get () {
                 return this._id;
-            },
+            }
         },
 
         /**
@@ -241,9 +245,9 @@ var BaseNode = cc.Class({
          * }
          */
         children: {
-            get() {
+            get () {
                 return this._children;
-            },
+            }
         },
 
         /**
@@ -257,9 +261,9 @@ var BaseNode = cc.Class({
          * cc.log("Node Children Count: " + count);
          */
         childrenCount: {
-            get() {
+            get () {
                 return this._children.length;
-            },
+            }
         },
 
         /**
@@ -278,10 +282,10 @@ var BaseNode = cc.Class({
          * node.active = false;
          */
         active: {
-            get() {
+            get () {
                 return this._active;
             },
-            set(value) {
+            set (value) {
                 value = !!value;
                 if (this._active !== value) {
                     this._active = value;
@@ -289,14 +293,11 @@ var BaseNode = cc.Class({
                     if (parent) {
                         var couldActiveInScene = parent._activeInHierarchy;
                         if (couldActiveInScene) {
-                            cc.director._nodeActivator.activateNode(
-                                this,
-                                value
-                            );
+                            cc.director._nodeActivator.activateNode(this, value);
                         }
                     }
                 }
-            },
+            }
         },
 
         /**
@@ -308,9 +309,9 @@ var BaseNode = cc.Class({
          * cc.log("activeInHierarchy: " + node.activeInHierarchy);
          */
         activeInHierarchy: {
-            get() {
+            get () {
                 return this._activeInHierarchy;
-            },
+            }
         },
     },
 
@@ -318,12 +319,10 @@ var BaseNode = cc.Class({
      * @method constructor
      * @param {String} [name]
      */
-    ctor(name) {
-        this._name = name !== undefined ? name : "New Node";
+    ctor (name) {
+        this._name = name !== undefined ? name : 'New Node';
         this._activeInHierarchy = false;
-        this._id = CC_EDITOR
-            ? Editor.Utils.UuidUtils.uuid()
-            : idGenerater.getNewId();
+        this._id = CC_EDITOR ? Editor.Utils.UuidUtils.uuid() : idGenerater.getNewId();
 
         cc.director._scheduler && cc.director._scheduler.enableForTarget(this);
 
@@ -336,11 +335,11 @@ var BaseNode = cc.Class({
          */
         this.__eventTargets = [];
     },
-    /**
+    /** 
      * !#en The parent of the node.
      * !#zh 该节点的父节点。
      * @property {Node} parent
-     * @example
+     * @example 
      * cc.log("Node Parent: " + node.parent);
      */
 
@@ -352,7 +351,7 @@ var BaseNode = cc.Class({
      * @example
      * var parent = this.node.getParent();
      */
-    getParent() {
+    getParent () {
         return this._parent;
     },
 
@@ -364,7 +363,7 @@ var BaseNode = cc.Class({
      * @example
      * node.setParent(newNode);
      */
-    setParent(value) {
+    setParent (value) {
         if (this._parent === value) {
             return;
         }
@@ -374,7 +373,7 @@ var BaseNode = cc.Class({
             }
         }
         var oldParent = this._parent;
-        if (CC_DEBUG && oldParent && oldParent._objFlags & Deactivating) {
+        if (CC_DEBUG && oldParent && (oldParent._objFlags & Deactivating)) {
             cc.errorID(3821);
         }
         this._parent = value || null;
@@ -382,11 +381,11 @@ var BaseNode = cc.Class({
         this._onSetParent(value);
 
         if (value) {
-            if (CC_DEBUG && value._objFlags & Deactivating) {
+            if (CC_DEBUG && (value._objFlags & Deactivating)) {
                 cc.errorID(3821);
             }
             eventManager._setDirtyForNode(this);
-            value._children && value._children.push(this);
+            value._children.push(this);
             value.emit && value.emit(CHILD_ADDED, this);
             value._renderFlag |= RenderFlow.FLAG_CHILDREN;
         }
@@ -404,7 +403,8 @@ var BaseNode = cc.Class({
                     oldParent._renderFlag &= ~RenderFlow.FLAG_CHILDREN;
                 }
             }
-        } else if (value) {
+        }
+        else if (value) {
             this._onHierarchyChanged(null);
         }
     },
@@ -424,7 +424,7 @@ var BaseNode = cc.Class({
      * var attrs = { key: 0, num: 100 };
      * node.attr(attrs);
      */
-    attr(attrs) {
+    attr (attrs) {
         js.mixin(this, attrs);
     },
 
@@ -439,15 +439,19 @@ var BaseNode = cc.Class({
      * @example
      * var child = node.getChildByUuid(uuid);
      */
-    getChildByUuid(uuid) {
+    getChildByUuid (uuid) {
         if (!uuid) {
             cc.log("Invalid uuid");
             return null;
         }
 
         var locChildren = this._children;
+        if (!locChildren){
+            return null;
+        }
         for (var i = 0, len = locChildren.length; i < len; i++) {
-            if (locChildren[i]._id === uuid) return locChildren[i];
+            if (locChildren[i]._id === uuid)
+                return locChildren[i];
         }
         return null;
     },
@@ -461,25 +465,27 @@ var BaseNode = cc.Class({
      * @example
      * var child = node.getChildByName("Test Node");
      */
-    getChildByName(name) {
+    getChildByName (name) {
         if (!name) {
             cc.log("Invalid name");
             return null;
         }
 
         var locChildren = this._children;
-        if (!locChildren) {
-            return;
+        if (!locChildren){
+            return null;
         }
         for (var i = 0, len = locChildren.length; i < len; i++) {
-            if (locChildren[i]._name === name) return locChildren[i];
+            if (locChildren[i]._name === name)
+                return locChildren[i];
         }
         return null;
     },
 
     // composition: ADD
 
-    addChild(child) {
+    addChild (child) {
+
         if (CC_DEV && !(child instanceof cc._BaseNode)) {
             return cc.errorID(1634, cc.js.getClassName(child));
         }
@@ -488,6 +494,7 @@ var BaseNode = cc.Class({
 
         // invokes the parent setter
         child.setParent(this);
+
     },
 
     /**
@@ -501,7 +508,7 @@ var BaseNode = cc.Class({
      * @example
      * node.insertChild(child, 2);
      */
-    insertChild(child, siblingIndex) {
+    insertChild (child, siblingIndex) {
         child.parent = this;
         child.setSiblingIndex(siblingIndex);
     },
@@ -516,10 +523,11 @@ var BaseNode = cc.Class({
      * @example
      * var index = node.getSiblingIndex();
      */
-    getSiblingIndex() {
+    getSiblingIndex () {
         if (this._parent) {
             return this._parent._children.indexOf(this);
-        } else {
+        }
+        else {
             return 0;
         }
     },
@@ -532,7 +540,7 @@ var BaseNode = cc.Class({
      * @example
      * node.setSiblingIndex(1);
      */
-    setSiblingIndex(index) {
+    setSiblingIndex (index) {
         if (!this._parent) {
             return;
         }
@@ -550,7 +558,8 @@ var BaseNode = cc.Class({
             siblings.splice(oldIndex, 1);
             if (index < siblings.length) {
                 siblings.splice(index, 0, this);
-            } else {
+            }
+            else {
                 siblings.push(this);
             }
             this._onSiblingIndexChanged && this._onSiblingIndexChanged(index);
@@ -578,7 +587,7 @@ var BaseNode = cc.Class({
      *     console.log('Walked through node ' + target.name + ' after walked all children in its sub tree');
      * });
      */
-    walk(prefunc, postfunc) {
+    walk (prefunc, postfunc) {
         var BaseNode = cc._BaseNode;
         var index = 1;
         var children, child, curr, i, afterChildren;
@@ -602,17 +611,19 @@ var BaseNode = cc.Class({
             if (!afterChildren && prefunc) {
                 // pre call
                 prefunc(curr);
-            } else if (afterChildren && postfunc) {
+            }
+            else if (afterChildren && postfunc) {
                 // post call
                 postfunc(curr);
             }
-
+            
             // Avoid memory leak
             stack[index] = null;
             // Do not repeatly visit child tree, just do post call and continue walk
             if (afterChildren) {
                 afterChildren = false;
-            } else {
+            }
+            else {
                 // Children not proceeded and has children, proceed to child tree
                 if (curr._children.length > 0) {
                     parent = curr;
@@ -647,7 +658,8 @@ var BaseNode = cc.Class({
                         children = parent._parent._children;
                         i = children.indexOf(parent);
                         parent = parent._parent;
-                    } else {
+                    }
+                    else {
                         // At root
                         parent = null;
                         children = null;
@@ -664,7 +676,9 @@ var BaseNode = cc.Class({
         BaseNode._stackId--;
     },
 
-    cleanup() {},
+    cleanup () {
+
+    },
 
     /**
      * !#en
@@ -682,9 +696,10 @@ var BaseNode = cc.Class({
      * node.removeFromParent();
      * node.removeFromParent(false);
      */
-    removeFromParent(cleanup) {
+    removeFromParent (cleanup) {
         if (this._parent) {
-            if (cleanup === undefined) cleanup = true;
+            if (cleanup === undefined)
+                cleanup = true;
             this._parent.removeChild(this, cleanup);
         }
     },
@@ -706,7 +721,7 @@ var BaseNode = cc.Class({
      * node.removeChild(newNode);
      * node.removeChild(newNode, false);
      */
-    removeChild(child, cleanup) {
+    removeChild (child, cleanup) {
         if (this._children.indexOf(child) > -1) {
             // If you don't do cleanup, the child's actions will not get removed and the
             if (cleanup || cleanup === undefined) {
@@ -730,15 +745,17 @@ var BaseNode = cc.Class({
      * node.removeAllChildren();
      * node.removeAllChildren(false);
      */
-    removeAllChildren(cleanup) {
+    removeAllChildren (cleanup) {
         // not using detachChild improves speed here
         var children = this._children;
-        if (cleanup === undefined) cleanup = true;
+        if (cleanup === undefined)
+            cleanup = true;
         for (var i = children.length - 1; i >= 0; i--) {
             var node = children[i];
             if (node) {
                 // If you don't do cleanup, the node's actions will not get removed and the
-                if (cleanup) node.cleanup();
+                if (cleanup)
+                    node.cleanup();
 
                 node.parent = null;
             }
@@ -755,14 +772,15 @@ var BaseNode = cc.Class({
      * @example
      * node.isChildOf(newNode);
      */
-    isChildOf(parent) {
+    isChildOf (parent) {
         var child = this;
         do {
             if (child === parent) {
                 return true;
             }
             child = child._parent;
-        } while (child);
+        }
+        while (child);
         return false;
     },
 
@@ -787,7 +805,7 @@ var BaseNode = cc.Class({
      * getComponent<T extends Component>(type: {prototype: T}): T
      * getComponent(className: string): any
      */
-    getComponent(typeOrClassName) {
+    getComponent (typeOrClassName) {
         var constructor = getConstructor(typeOrClassName);
         if (constructor) {
             return findComponent(this, constructor);
@@ -808,9 +826,8 @@ var BaseNode = cc.Class({
      * getComponents<T extends Component>(type: {prototype: T}): T[]
      * getComponents(className: string): any[]
      */
-    getComponents(typeOrClassName) {
-        var constructor = getConstructor(typeOrClassName),
-            components = [];
+    getComponents (typeOrClassName) {
+        var constructor = getConstructor(typeOrClassName), components = [];
         if (constructor) {
             findComponents(this, constructor, components);
         }
@@ -830,7 +847,7 @@ var BaseNode = cc.Class({
      * getComponentInChildren<T extends Component>(type: {prototype: T}): T
      * getComponentInChildren(className: string): any
      */
-    getComponentInChildren(typeOrClassName) {
+    getComponentInChildren (typeOrClassName) {
         var constructor = getConstructor(typeOrClassName);
         if (constructor) {
             return findChildComponent(this._children, constructor);
@@ -851,9 +868,8 @@ var BaseNode = cc.Class({
      * getComponentsInChildren<T extends Component>(type: {prototype: T}): T[]
      * getComponentsInChildren(className: string): any[]
      */
-    getComponentsInChildren(typeOrClassName) {
-        var constructor = getConstructor(typeOrClassName),
-            components = [];
+    getComponentsInChildren (typeOrClassName) {
+        var constructor = getConstructor(typeOrClassName), components = [];
         if (constructor) {
             findComponents(this, constructor, components);
             findChildComponents(this._children, constructor, components);
@@ -861,25 +877,19 @@ var BaseNode = cc.Class({
         return components;
     },
 
-    _checkMultipleComp:
-        CC_EDITOR &&
-        function (ctor) {
-            var existing = this.getComponent(ctor._disallowMultiple);
-            if (existing) {
-                if (existing.constructor === ctor) {
-                    cc.errorID(3805, js.getClassName(ctor), this._name);
-                } else {
-                    cc.errorID(
-                        3806,
-                        js.getClassName(ctor),
-                        this._name,
-                        js.getClassName(existing)
-                    );
-                }
-                return false;
+    _checkMultipleComp: CC_EDITOR && function (ctor) {
+        var existing = this.getComponent(ctor._disallowMultiple);
+        if (existing) {
+            if (existing.constructor === ctor) {
+                cc.errorID(3805, js.getClassName(ctor), this._name);
             }
-            return true;
-        },
+            else {
+                cc.errorID(3806, js.getClassName(ctor), this._name, js.getClassName(existing));
+            }
+            return false;
+        }
+        return true;
+    },
 
     /**
      * !#en Adds a component class to the node. You can also add component to node by passing in the name of the script.
@@ -894,16 +904,16 @@ var BaseNode = cc.Class({
      * addComponent<T extends Component>(type: {new(): T}): T
      * addComponent(className: string): any
      */
-    addComponent(typeOrClassName) {
-        if (CC_EDITOR && this._objFlags & Destroying) {
-            cc.error("isDestroying");
+    addComponent (typeOrClassName) {
+        if (CC_EDITOR && (this._objFlags & Destroying)) {
+            cc.error('isDestroying');
             return null;
         }
 
         // get component
 
         var constructor;
-        if (typeof typeOrClassName === "string") {
+        if (typeof typeOrClassName === 'string') {
             constructor = js.getClassByName(typeOrClassName);
             if (!constructor) {
                 cc.errorID(3807, typeOrClassName);
@@ -912,7 +922,8 @@ var BaseNode = cc.Class({
                 }
                 return null;
             }
-        } else {
+        }
+        else {
             if (!typeOrClassName) {
                 cc.errorID(3804);
                 return null;
@@ -922,7 +933,7 @@ var BaseNode = cc.Class({
 
         // check component
 
-        if (typeof constructor !== "function") {
+        if (typeof constructor !== 'function') {
             cc.errorID(3809);
             return null;
         }
@@ -959,11 +970,7 @@ var BaseNode = cc.Class({
         var component = new constructor();
         component.node = this;
         this._components && this._components.push(component);
-        if (
-            (CC_EDITOR || CC_TEST) &&
-            cc.engine &&
-            this._id in cc.engine.attachedObjsForEditor
-        ) {
+        if ((CC_EDITOR || CC_TEST) && cc.engine && (this._id in cc.engine.attachedObjsForEditor)) {
             cc.engine.attachedObjsForEditor[component._id] = component;
         }
         if (this._activeInHierarchy) {
@@ -980,52 +987,46 @@ var BaseNode = cc.Class({
      * @param {Number} index
      * @private
      */
-    _addComponentAt:
-        CC_EDITOR &&
-        function (comp, index) {
-            if (this._objFlags & Destroying) {
-                return cc.error("isDestroying");
-            }
-            if (!(comp instanceof cc.Component)) {
-                return cc.errorID(3811);
-            }
-            if (index > this._components.length) {
-                return cc.errorID(3812);
-            }
+    _addComponentAt: CC_EDITOR && function (comp, index) {
+        if (this._objFlags & Destroying) {
+            return cc.error('isDestroying');
+        }
+        if (!(comp instanceof cc.Component)) {
+            return cc.errorID(3811);
+        }
+        if (index > this._components.length) {
+            return cc.errorID(3812);
+        }
 
-            // recheck attributes because script may changed
-            var ctor = comp.constructor;
-            if (ctor._disallowMultiple) {
-                if (!this._checkMultipleComp(ctor)) {
-                    return;
-                }
+        // recheck attributes because script may changed
+        var ctor = comp.constructor;
+        if (ctor._disallowMultiple) {
+            if (!this._checkMultipleComp(ctor)) {
+                return;
             }
-            var ReqComp = ctor._requireComponent;
-            if (ReqComp && !this.getComponent(ReqComp)) {
-                if (index === this._components.length) {
-                    // If comp should be last component, increase the index because required component added
-                    ++index;
-                }
-                var depended = this.addComponent(ReqComp);
-                if (!depended) {
-                    // depend conflicts
-                    return null;
-                }
+        }
+        var ReqComp = ctor._requireComponent;
+        if (ReqComp && !this.getComponent(ReqComp)) {
+            if (index === this._components.length) {
+                // If comp should be last component, increase the index because required component added
+                ++index;
             }
+            var depended = this.addComponent(ReqComp);
+            if (!depended) {
+                // depend conflicts
+                return null;
+            }
+        }
 
-            comp.node = this;
-            this._components.splice(index, 0, comp);
-            if (
-                (CC_EDITOR || CC_TEST) &&
-                cc.engine &&
-                this._id in cc.engine.attachedObjsForEditor
-            ) {
-                cc.engine.attachedObjsForEditor[comp._id] = comp;
-            }
-            if (this._activeInHierarchy) {
-                cc.director._nodeActivator.activateComp(comp);
-            }
-        },
+        comp.node = this;
+        this._components.splice(index, 0, comp);
+        if ((CC_EDITOR || CC_TEST) && cc.engine && (this._id in cc.engine.attachedObjsForEditor)) {
+            cc.engine.attachedObjsForEditor[comp._id] = comp;
+        }
+        if (this._activeInHierarchy) {
+            cc.director._nodeActivator.activateComp(comp);
+        }
+    },
 
     /**
      * !#en
@@ -1042,7 +1043,7 @@ var BaseNode = cc.Class({
      * var Test = require("Test");
      * node.removeComponent(Test);
      */
-    removeComponent(component) {
+    removeComponent (component) {
         if (!component) {
             cc.errorID(3813);
             return;
@@ -1061,27 +1062,21 @@ var BaseNode = cc.Class({
      * @return {Component}
      * @private
      */
-    _getDependComponent:
-        CC_EDITOR &&
-        function (depended) {
-            for (var i = 0; i < this._components.length; i++) {
-                var comp = this._components[i];
-                if (
-                    comp !== depended &&
-                    comp.isValid &&
-                    !cc.Object._willDestroy(comp)
-                ) {
-                    var depend = comp.constructor._requireComponent;
-                    if (depend && depended instanceof depend) {
-                        return comp;
-                    }
+    _getDependComponent: CC_EDITOR && function (depended) {
+        for (var i = 0; i < this._components.length; i++) {
+            var comp = this._components[i];
+            if (comp !== depended && comp.isValid && !cc.Object._willDestroy(comp)) {
+                var depend = comp.constructor._requireComponent;
+                if (depend && depended instanceof depend) {
+                    return comp;
                 }
             }
-            return null;
-        },
+        }
+        return null;
+    },
 
     // do remove component, only used internally
-    _removeComponent(component) {
+    _removeComponent (component) {
         if (!component) {
             cc.errorID(3814);
             return;
@@ -1094,13 +1089,14 @@ var BaseNode = cc.Class({
                 if ((CC_EDITOR || CC_TEST) && cc.engine) {
                     delete cc.engine.attachedObjsForEditor[component._id];
                 }
-            } else if (component.node !== this) {
+            }
+            else if (component.node !== this) {
                 cc.errorID(3815);
             }
         }
     },
 
-    destroy() {
+    destroy () {
         if (cc.Object.prototype.destroy.call(this)) {
             this.active = false;
         }
@@ -1117,19 +1113,19 @@ var BaseNode = cc.Class({
      * @example
      * node.destroyAllChildren();
      */
-    destroyAllChildren() {
+    destroyAllChildren () {
         var children = this._children;
         for (var i = 0; i < children.length; ++i) {
             children[i].destroy();
         }
     },
 
-    _onSetParent(value) {},
-    _onPostActivated() {},
-    _onBatchRestored() {},
-    _onBatchCreated() {},
+    _onSetParent (value) {},
+    _onPostActivated () {},
+    _onBatchRestored () {},
+    _onBatchCreated () {},
 
-    _onHierarchyChanged(oldParent) {
+    _onHierarchyChanged (oldParent) {
         var newParent = this._parent;
         if (this._persistNode && !(newParent instanceof cc.Scene)) {
             cc.game.removePersistRootNode(this);
@@ -1145,52 +1141,45 @@ var BaseNode = cc.Class({
             if (!inCurrentSceneBefore && inCurrentSceneNow) {
                 // attached
                 this._registerIfAttached(true);
-            } else if (inCurrentSceneBefore && !inCurrentSceneNow) {
+            }
+            else if (inCurrentSceneBefore && !inCurrentSceneNow) {
                 // detached
                 this._registerIfAttached(false);
             }
 
             // update prefab
-            var newPrefabRoot =
-                newParent && newParent._prefab && newParent._prefab.root;
+            var newPrefabRoot = newParent && newParent._prefab && newParent._prefab.root;
             var myPrefabInfo = this._prefab;
-            var PrefabUtils = Editor.require("scene://utils/prefab");
+            var PrefabUtils = Editor.require('scene://utils/prefab');
             if (myPrefabInfo) {
                 if (newPrefabRoot) {
                     if (myPrefabInfo.root !== newPrefabRoot) {
                         // change prefab
                         PrefabUtils.unlinkPrefab(this);
-                        PrefabUtils.linkPrefab(
-                            newPrefabRoot._prefab.asset,
-                            newPrefabRoot,
-                            this
-                        );
+                        PrefabUtils.linkPrefab(newPrefabRoot._prefab.asset, newPrefabRoot, this);
                     }
-                } else if (myPrefabInfo.root !== this) {
+                }
+                else if (myPrefabInfo.root !== this) {
                     // detach from prefab
                     PrefabUtils.unlinkPrefab(this);
                 }
-            } else if (newPrefabRoot) {
+            }
+            else if (newPrefabRoot) {
                 // attach to prefab
-                PrefabUtils.linkPrefab(
-                    newPrefabRoot._prefab.asset,
-                    newPrefabRoot,
-                    this
-                );
+                PrefabUtils.linkPrefab(newPrefabRoot._prefab.asset, newPrefabRoot, this);
             }
 
             // conflict detection
             _Scene.DetectConflict.afterAddChild(this);
         }
 
-        var shouldActiveNow =
-            this._active && !!(newParent && newParent._activeInHierarchy);
+        var shouldActiveNow = this._active && !!(newParent && newParent._activeInHierarchy);
         if (this._activeInHierarchy !== shouldActiveNow) {
             cc.director._nodeActivator.activateNode(this, shouldActiveNow);
         }
     },
 
-    _instantiate(cloned) {
+    _instantiate (cloned) {
         if (!cloned) {
             cloned = cc.instantiate._clone(this, this);
         }
@@ -1198,20 +1187,18 @@ var BaseNode = cc.Class({
         var thisPrefabInfo = this._prefab;
         if (CC_EDITOR && thisPrefabInfo) {
             if (this !== thisPrefabInfo.root) {
-                var PrefabUtils = Editor.require("scene://utils/prefab");
+                var PrefabUtils = Editor.require('scene://utils/prefab');
                 PrefabUtils.initClonedChildOfPrefab(cloned);
             }
         }
-        var syncing =
-            thisPrefabInfo &&
-            this === thisPrefabInfo.root &&
-            thisPrefabInfo.sync;
+        var syncing = thisPrefabInfo && this === thisPrefabInfo.root && thisPrefabInfo.sync;
         if (syncing) {
             //if (thisPrefabInfo._synced) {
             //    return clone;
             //}
-        } else if (CC_EDITOR && cc.engine._isPlaying) {
-            cloned._name += " (Clone)";
+        }
+        else if (CC_EDITOR && cc.engine._isPlaying) {
+            cloned._name += ' (Clone)';
         }
 
         // reset and init
@@ -1221,33 +1208,32 @@ var BaseNode = cc.Class({
         return cloned;
     },
 
-    _registerIfAttached:
-        (CC_EDITOR || CC_TEST) &&
-        function (register) {
-            var attachedObjsForEditor = cc.engine.attachedObjsForEditor;
-            if (register) {
-                attachedObjsForEditor[this._id] = this;
-                for (let i = 0; i < this._components.length; i++) {
-                    let comp = this._components[i];
-                    attachedObjsForEditor[comp._id] = comp;
-                }
-                cc.engine.emit("node-attach-to-scene", this);
-            } else {
-                cc.engine.emit("node-detach-from-scene", this);
-                delete attachedObjsForEditor[this._id];
-                for (let i = 0; i < this._components.length; i++) {
-                    let comp = this._components[i];
-                    delete attachedObjsForEditor[comp._id];
-                }
+    _registerIfAttached: (CC_EDITOR || CC_TEST) && function (register) {
+        var attachedObjsForEditor = cc.engine.attachedObjsForEditor;
+        if (register) {
+            attachedObjsForEditor[this._id] = this;
+            for (let i = 0; i < this._components.length; i++) {
+                let comp = this._components[i];
+                attachedObjsForEditor[comp._id] = comp;
             }
-            var children = this._children;
-            for (let i = 0, len = children.length; i < len; ++i) {
-                var child = children[i];
-                child._registerIfAttached(register);
+            cc.engine.emit('node-attach-to-scene', this);
+        }
+        else {
+            cc.engine.emit('node-detach-from-scene', this);
+            delete attachedObjsForEditor[this._id];
+            for (let i = 0; i < this._components.length; i++) {
+                let comp = this._components[i];
+                delete attachedObjsForEditor[comp._id];
             }
-        },
+        }
+        var children = this._children;
+        for (let i = 0, len = children.length; i < len; ++i) {
+            var child = children[i];
+            child._registerIfAttached(register);
+        }
+    },
 
-    _onPreDestroy() {
+    _onPreDestroy () {
         var i, len;
 
         // marked as destroying
@@ -1255,7 +1241,7 @@ var BaseNode = cc.Class({
 
         // detach self and children from editor
         var parent = this._parent;
-        var destroyByParent = parent && parent._objFlags & Destroying;
+        var destroyByParent = parent && (parent._objFlags & Destroying);
         if (!destroyByParent && (CC_EDITOR || CC_TEST)) {
             this._registerIfAttached(false);
         }
@@ -1291,24 +1277,20 @@ var BaseNode = cc.Class({
             if (parent) {
                 var childIndex = parent._children.indexOf(this);
                 parent._children.splice(childIndex, 1);
-                parent.emit && parent.emit("child-removed", this);
+                parent.emit && parent.emit('child-removed', this);
             }
         }
 
         return destroyByParent;
     },
 
-    onRestore:
-        CC_EDITOR &&
-        function () {
-            // check activity state
-            var shouldActiveNow =
-                this._active &&
-                !!(this._parent && this._parent._activeInHierarchy);
-            if (this._activeInHierarchy !== shouldActiveNow) {
-                cc.director._nodeActivator.activateNode(this, shouldActiveNow);
-            }
-        },
+    onRestore: CC_EDITOR && function () {
+        // check activity state
+        var shouldActiveNow = this._active && !!(this._parent && this._parent._activeInHierarchy);
+        if (this._activeInHierarchy !== shouldActiveNow) {
+            cc.director._nodeActivator.activateNode(this, shouldActiveNow);
+        }
+    },
 });
 
 BaseNode.idGenerater = idGenerater;
@@ -1320,41 +1302,41 @@ BaseNode._stackId = 0;
 BaseNode.prototype._onPreDestroyBase = BaseNode.prototype._onPreDestroy;
 if (CC_EDITOR) {
     BaseNode.prototype._onPreDestroy = function () {
-        var destroyByParent = this._onPreDestroyBase();
-        if (!destroyByParent) {
-            // ensure this node can reattach to scene by undo system
-            // (simulate some destruct logic to make undo system work correctly)
-            this._parent = null;
-        }
-        return destroyByParent;
-    };
+       var destroyByParent = this._onPreDestroyBase();
+       if (!destroyByParent) {
+           // ensure this node can reattach to scene by undo system
+           // (simulate some destruct logic to make undo system work correctly)
+           this._parent = null;
+       }
+       return destroyByParent;
+   };
 }
 
-BaseNode.prototype._onHierarchyChangedBase =
-    BaseNode.prototype._onHierarchyChanged;
+BaseNode.prototype._onHierarchyChangedBase = BaseNode.prototype._onHierarchyChanged;
 
-if (CC_EDITOR) {
+if(CC_EDITOR) {
     BaseNode.prototype._onRestoreBase = BaseNode.prototype.onRestore;
 }
 
 // Define public getter and setter methods to ensure api compatibility.
-var SameNameGetSets = ["parent", "name", "children", "childrenCount"];
+var SameNameGetSets = ['parent', 'name', 'children', 'childrenCount',];
 misc.propertyDefine(BaseNode, SameNameGetSets, {});
 
 if (CC_DEV) {
     // promote debug info
-    js.get(BaseNode.prototype, " INFO ", function () {
-        var path = "";
+    js.get(BaseNode.prototype, ' INFO ', function () {
+        var path = '';
         var node = this;
         while (node && !(node instanceof cc.Scene)) {
             if (path) {
-                path = node.name + "/" + path;
-            } else {
+                path = node.name + '/' + path;
+            }
+            else {
                 path = node.name;
             }
             node = node._parent;
         }
-        return this.name + ", path: " + path;
+        return this.name + ', path: ' + path;
     });
 }
 
